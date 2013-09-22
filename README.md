@@ -10,16 +10,25 @@ Also, thanks to the accel, it is possible to implement a low power mode.
 
 # Milestones
 
-[ ] Set the accelerometer and be able to receive from it.
-[ ] Set up simple LED. Have a LED bright up when the accel detects the "bike" is braking.
-[ ] Set up powerful final LED.
-[ ] Switch off led if there isn't movement for 1 minute.
-[ ] Set up low power mode of atmega and accelerometer. Set up wake-up.
-[ ] Power it by batteries.
-[ ] End prototype phase: abandon Arduino format, program an ATmega328. Design final HW format.
-[ ] Pack it for use on the bike!
-[ ] ???
-[ ] Profit!
+ - [ ] Set the accelerometer and be able to receive from it.
+ - 
+ - [ ] Set up simple LED. Have a LED bright up when the accel detects the "bike" is braking.
+ - 
+ - [ ] Set up powerful final LED.
+ - 
+ - [ ] Switch off led if there isn't movement for 1 minute.
+ - 
+ - [ ] Set up low power mode of atmega and accelerometer. Set up wake-up.
+ - 
+ - [ ] Power it by batteries.
+ - 
+ - [ ] End prototype phase: abandon Arduino format, program an ATmega328. Design final HW format.
+ - 
+ - [ ] Pack it for use on the bike!
+ - 
+ - [ ] ???
+ - 
+ - [ ] Profit!
 
 # Improvements
 
