@@ -35,7 +35,7 @@ accel.
 
 # License
 
-![gplv3](https://github.com/viccuad/braike/raw/master/assets/gplv3.png)
+![gplv3](https://github.com/viccuad/braike/raw/master/assets/web/gplv3.png)
 
 This work is released under the terms of GPLv3 license. You can find a copy of
 the GPLv3 license in LICENSE file.
