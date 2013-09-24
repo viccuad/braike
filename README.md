@@ -23,6 +23,12 @@ mode: the light will switch itself off if not moved for a while.
  - [ ] ?
  - [ ] Profit!
 
+# Building
+Do it with Arduino IDE or go console style (preferred way):
+
+1. Install [inotool](http://inotool.org/)
+2. Go to firmware directory and then `ìnotool build` & `inotool upload`
+
 
 # Improvements
 

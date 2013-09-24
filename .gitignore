@@ -18,3 +18,5 @@
 
 # temp files
 *~
+firmware/.build/*
+*data
