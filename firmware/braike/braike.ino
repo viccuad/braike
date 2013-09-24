@@ -89,12 +89,13 @@ void loop()
   // If int1 goes high, all data registers have new data
   if (digitalRead(int1Pin)==1) { // Interrupt pin, should probably attach to interrupt function
     readAccelData(accelCount);  // Read the x/y/z adc values
-    //Below we'll print out the ADC values for acceleration
-    for (int i=0; i<3; i++) {
-      Serial.print(accelCount[i]);
-      Serial.print("\t\t");
-    }
-    Serial.println();
+
+    // //Below we'll print out the ADC values for acceleration
+    // for (int i=0; i<3; i++) {
+    //   Serial.print(accelCount[i]);
+    //   Serial.print("\t");
+    // }
+    // Serial.println();
 
 
     // Now we'll calculate the accleration value into actual g's
@@ -103,7 +104,7 @@ void loop()
     // Print out values
     for (int i=0; i<3; i++) {
       Serial.print(accelG[i], 4);  // Print g values
-      Serial.print("\t\t");  // tabs in between axes
+      Serial.print("\t");  // tabs in between axes
       if ( accelG[0] > 1.8 || accelG[1] > 1.8 || accelG[2] > 1.8) 
         brakeLed = true;
     }
@@ -111,7 +112,7 @@ void loop()
     
     checkTimers();
   }
-  //delay(100);  // Delay here for visibility
+  delay(100);  // Delay here for visibility
 }
 
 
