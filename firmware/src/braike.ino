@@ -112,7 +112,7 @@ void loop()
     
     checkTimers();
   }
-  delay(100);  // Delay here for visibility
+  delay(1);  // Delay here for visibility
 }
 
 

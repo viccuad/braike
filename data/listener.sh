@@ -1,7 +1,12 @@
-#!/bin/sh
-# This script configures the stty for reading the arduino serial port,
-# starts listening on it and saves the output on textdata.data
+#!/bin/bash
+# This script starts ino serial for reading the arduino serial port,
+# saves the read on test.data, and fires up kst for plotting it.
 
-stty -F /dev/ttyACM0 57600
-cat /dev/ttyACM0 > testdata.txt
+nohup /usr/bin/kst2 kst_config.kst &
+
+echo /dev/null > test.data
+echo "reading serial port"
+echo "to stop: ctrl+A,ctrl+X"
+ino serial -b 57600 > test.data
+ 
 
