@@ -15,6 +15,10 @@ mode: the light will switch itself off if not moved for a while.
  - [x] Set the accelerometer and be able to receive from it. Understand the accel.
  - [x] Set up simple LED. Have a LED bright up when the accel detects the "bike" is braking.
  - [ ] Filter the accel axis info. Differenciate from humps and lateral movements, and braking (the though one).
+    - [ ] Filter accel info (Butterworth filters, averages?)
+    - [ ] Calibrate the direction at the beginning. 
+    - [ ] Save a vector of direction meanwhile it is in movement.
+    - [ ] Detect braking. 
  - [ ] Set up powerful final LED.
  - [ ] Power it by batteries.
  - [ ] Go to low power mode on atmega and accelerometer if there isn't movement for 1 minute. Set up wake-up.
@@ -27,7 +31,10 @@ mode: the light will switch itself off if not moved for a while.
 Do it with Arduino IDE or go console style (preferred way):
 
 1. Install [inotool](http://inotool.org/)
-2. Go to firmware directory and then `ìnotool build` & `inotool upload`
+2. Go to firmware directory and then `ìno build` & `ino upload`
+
+# Data visualization
+Install [kst-plot](http://kst-plot.kde.org/). Run `./listener.sh` from /data dir.
 
 
 # Improvements
