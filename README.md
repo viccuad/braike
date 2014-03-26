@@ -36,6 +36,9 @@ Do it with Arduino IDE or go console style (preferred way):
 2. Install picocom 
 3. Run `./listener.sh` from /data dir.
 
+You will obtain something like this so far:
+![example-raw](https://github.com/viccuad/braike/raw/master/assets/example.jpg)
+
 # Improvements
 Add a photoresistor to modulate the brightness of the LED, and extend the battery.
 
