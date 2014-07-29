@@ -10,7 +10,7 @@ mode: the light will switch itself off if not moved for a while.
 
 # Current idea: flowchart
 
-![flowchart](https://github.com/viccuad/braike/raw/master/assets/flowchart.png)
+![flowchart](https://github.com/viccuad/braike/raw/master/assets/flowchart.png) 
 
 # Milestones
  - [x] Set the accelerometer and be able to receive from it. Understand the accel.
