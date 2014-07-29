@@ -7,6 +7,8 @@
 echo /dev/null > test.data
 echo "reading serial port"
 echo "to stop: ctrl+A,ctrl+X"
-ino serial -b 57600 > test.data
+# call ino serial from /firmware so it will use ino.ini values:
+cd ../firmware
+ino serial > ../data/test.data
 
 
