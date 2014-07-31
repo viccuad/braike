@@ -19,12 +19,12 @@ mode: the light will switch itself off if not moved for a while.
     - [x] Fix clock timing from atmega and accel.
     - [x] Filter accel info (Butterworth filters, averages?).
     - [ ] ~~Calibrate the direction at the beginning.~~
-    - [ ] ~~Save a vector of direction meanwhile it is in movement.~~
+    - [ ] Save a vector of direction/tilt meanwhile it is in movement.
     - [ ] Detect braking. 
  - [ ] Set up powerful final LED.
  - [ ] Power it by batteries.
  - [ ] Go to low power mode on atmega and accelerometer if there isn't movement for 1 minute. Set up wake-up.
- - [ ] End prototype phase: abandon Arduino format, program ~~an ATmega328~~ a 3.3v powered Atmega. Design final HW format.
+ - [ ] End prototype phase: abandon Arduino format, program an ATmega328. Design final HW format.
  - [ ] Pack it for use on the bike!
  - [ ] ?
  - [ ] Profit!

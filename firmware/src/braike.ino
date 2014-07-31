@@ -27,60 +27,74 @@
 #define MMA8452_ADDRESS 0x1C
 #endif
 
-// Set the scale below either 2, 4 or 8
-const byte GSCALE = 2;  // Sets full-scale range to +/-2, 4, or 8g. Used to calc real g values.
-// Set the output data rate below. Value should be between 0 and 7
+/* Set the scale to either 2 (+/-2), 4 or 8g */
+const byte GSCALE = 2;
+/* Set the output data rate. Value should be between 0 and 7 */
 const byte dataRate = 4;  // 0=800Hz, 1=400, 2=200, 3=100, 4=50, 5=12.5, 6=6.25, 7=1.56
 
-// Pin definitions
+/* Pin definitions */
 int int1Pin = 2;    // These can be changed, 2 and 3 are the Arduinos external interruption pins
 int ledPin  = 9;    // digital pin where the LED is connected. Connect to a pin that was pulse width modulation to fake analog output.
 
-// led variables
+/* Led variables */
 int LEDstate = LOW;             // LEDstate used to set the LED
 long previousMillis = 0;        // will store last time LED was updated
-int brightness = 0;            // how bright the LED is. value [0,255]
+int resting_brightness = 0;             // how bright the LED is. value [0,255]
 // the follow variables is a long because the time, measured in miliseconds,
 // will quickly become a bigger number than can be stored in an int.
 const long intervalLED = 1000;  // interval at which to blink (milliseconds)
 long LEDonMillis;               // will store last time the led time was updated
-bool brakeLed = false;
 
-// sleep variables
+/* Sleep variables */
 const long intervalSleep = 60000;  // interval at which to go to sleep (milliseconds)
 
-// accel variables
+/* Accel variables */
 int accelCount[3];  // Stores the 12-bit signed value
 float accelG[3];    // Stores the real accel value in g's
 
+/* Moving average variables */
 float Sample_Vector[9];
-float subtotal, min, max, mov_avg;
+float subtotal, min, max, acc;
+
+/* Threshold variables */
+bool brakeLed = false;
+float soft_braking, medium_braking, strong_braking, maximum_value;
+
 
 void setup()
 {
 	byte c;
 
+	/* Debug printing */
 	Serial.begin(9600);
 
-	// Set up the interrupt pins, they're set as active high, push-pull
+	/* Set up the interrupt pins, they're set as active high, push-pull */
 	pinMode(int1Pin, INPUT);
 	digitalWrite(int1Pin, LOW);
 	pinMode(ledPin, OUTPUT);
 
-	//Initialize LED
-	analogWrite(ledPin, brightness);
+	/* Initialize LED */
+	analogWrite(ledPin,resting_brightness);
 
-	// Read the WHO_AM_I register, this is a good test of communication
-	c = readRegister(0x0D);  // Read WHO_AM_I register
+	/* Read the WHO_AM_I register, this is a good test of communication */
+	c = readRegister(0x0D);  // read WHO_AM_I register
 	if (c == 0x2A) {// WHO_AM_I should always be 0x2A
 		initMMA8452(GSCALE, dataRate);  // init the accelerometer if communication is OK
+		/* Debug printing */
 		Serial.println("MMA8452Q is online...");
 	}
 	else {
+		/* Debug printing */
 		Serial.print("Could not connect to MMA8452Q: 0x");
 		Serial.println(c, HEX);
-		while(1) ; // Loop forever if communication doesn't happen
+		while(1) ; // loop forever if communication doesn't happen
 	}
+
+	/* Set up thresholds */
+	maximum_value = 2;
+	soft_braking = 0.3 * maximum_value;
+	medium_braking = 0.5 * maximum_value;
+	strong_braking = 0.7 * maximum_value;
 }
 
 /**
@@ -92,69 +106,63 @@ void loop()
 
 	// If int1 goes high, all data registers have new data
 	if (digitalRead(int1Pin)==1) { // Interrupt pin, should probably attach to interrupt function
-		//readAccelData(accelCount);  // Read the x/y/z adc values
 
-		// // Now we'll calculate the accleration value into actual g's
-		// 		for (int i=0; i<3; i++)
-		// 			accelG[i] = (float) accelCount[i]/((1<<12)/(2*GSCALE));  // get actual g value, this depends on scale being set
-
-
-		// //Below we'll print out the ADC values for acceleration
-		// for (int i=0; i<3; i++) {
-		//   Serial.print(accelCount[i]);
-		//   Serial.print("\t");
-		// }
-		// Serial.println();
-
-
-
-		// Digital filtering by a moving average as a low-pass filter:
+		/* Digital filtering using a moving average as a low-pass filter */
 		subtotal = 0;
 		for(int k=0; k<10; ++k){
 			if(k!=9)
 				Sample_Vector[k] = Sample_Vector[k+1];
 			else {
-				//...
-				/* when new data available, copying in the buffer vector */
-				//Sample_Vector[9] = AIS326DQ_Read_1Axis(OUTX_L);
+				/* When new data available, read the x/y/z adc values */
+				readAccelData(accelCount);
 
-				readAccelData(accelCount);  // Read the x/y/z adc values
-
-				// Now we'll calculate the accleration value into actual g's
+				/* Now we'll calculate the accleration value into actual g's.
+				   because of the moving average, their amplitude is reduced */
 				for (int i=0; i<3; i++)
-					accelG[i] = (float) accelCount[i]/((1<<12)/(2*GSCALE));  // get actual g value, this depends on scale being set
+					accelG[i] = (float) accelCount[i]/((1<<12)/(2*GSCALE));
 
 				Sample_Vector[9] = accelG[2]; // Z axis
 
 			}
 			subtotal += Sample_Vector[k];
 
-			/* calculation of the max and the min in the buffer vector */
+			/* Calculation of the max and the min in the buffer vector */
 			if( Sample_Vector[k] < min )
 				min = Sample_Vector[k];
 			if( Sample_Vector[k] > max )
 				max = Sample_Vector[k];
 		}
-		/* calculation of the moving average value */
-		mov_avg = ((subtotal - min - max)/8);
+		/* Calculation of the moving average value */
+		acc = ((subtotal - min - max)/8);
 
+		/* Debug printing */
 		Serial.print(Sample_Vector[9]);
 		Serial.print("\t");  // tabs in between axes
-		Serial.print(mov_avg);
+		Serial.print(acc);
 		Serial.print("\t");  // tabs in between axes
 		Serial.print(1);
 		Serial.println();
-		if ( accelG[0] > 1.8 || accelG[1] > 1.8 || accelG[2] > 1.8)
-			brakeLed = true;
+
+		/* Lookup activation thresholds */
+		if(acc > strong_braking){ 		/* it corresponds to the maximum braking effort */
+    			analogWrite(ledPin, 64); 	/* set the PWM duty cycle to 25% */
+			brakeLed = TRUE;
+		}
+		else if(acc > medium_braking){		/* it corresponds to a medium braking effort */
+			analogWrite(ledPin, 127); 	/* set the PWM duty cycle to 50% */
+			brakeLed = TRUE;
+		}
+		else if(acc > soft_braking){		/* it corresponds to a soft braking effort */
+			analogWrite(ledPin, 191);	/* set the PWM duty cycle to 75% */
+			brakeLed = TRUE;
+		}
+		else{ 					/* if no braking */
+			analogWrite(ledPin, 255); 	/* PWM duty cycle to 100% set LEDs OFF */
+			brakeLed = FALSE;
+		}
 		checkTimers();
-
-
-
-		// checkTimers();
 	}
-	//delay(1);  // Delay here for visibility
 }
-
 
 
 /*
@@ -166,20 +174,19 @@ void loop()
  */
 void checkTimers()
 {
-	// blink sincHoriario LED:
+	/* Blink sincHoriario LED */
 	if (brakeLed){// if time sync frame, light up led
-		analogWrite(ledPin, 255); // full brightness
 		LEDonMillis = millis();
 		brakeLed = false;
 	}
-	//    check to see if it's time to power off the LED; that is, if the
-	// difference between the current time and last time you blinked
-	// the LED is bigger than the interval at which you want to
-	// have the LED on.
+	/* Check to see if it's time to power off the LED;
+	   that is, if the difference between the current time and last time you
+	   blinked the LED is bigger than the interval at which you want to have
+	   the LED on */
 	unsigned long currentMillis = millis();
 	if(currentMillis - LEDonMillis > intervalLED) {
 		// save the last time you blinked the LED
-		analogWrite(ledPin, brightness); // default brightness
+		analogWrite(ledPin, resting_brightness); // default brightness
 	}
 }
 
@@ -194,11 +201,11 @@ void readAccelData(int * destination)
 
 	readRegisters(0x01, 6, &rawData[0]);  // Read the six raw data registers into data array
 
-	// Loop to calculate 12-bit ADC and g value for each axis
+	/* Loop to calculate 12-bit ADC and g value for each axis */
 	for (int i=0; i<6; i+=2) {
 		destination[i/2] = ((rawData[i] << 8) | rawData[i+1]) >> 4;  // Turn the MSB and LSB into a 12-bit value
 		if (rawData[i] > 0x7F) {
-			// If the number is negative, we have to make it so manually (no 12-bit data type)
+			/* If the number is negative, we have to make it so manually (no 12-bit data type) */
 			destination[i/2] = ~destination[i/2] + 1;
 			destination[i/2] *= -1;  // Transform into negative 2's complement #
 		}
@@ -215,35 +222,35 @@ void initMMA8452(byte fsr, byte dataRate)
 {
 	MMA8452Standby();  // Must be in standby to change registers
 
-	// Set up the full scale range to 2, 4, or 8g.
+	/* Set up the full scale range to 2, 4, or 8g */
 	if ((fsr==2)||(fsr==4)||(fsr==8))
 		writeRegister(0x0E, fsr >> 2);
 	else
 		writeRegister(0x0E, 0);
 
-	// Setup the 3 data rate bits, from 0 to 7
+	/* Setup the 3 data rate bits, from 0 to 7 */
 	writeRegister(0x2A, readRegister(0x2A) & ~(0x38));
 	if (dataRate <= 7)
 		writeRegister(0x2A, readRegister(0x2A) | (dataRate << 3));
 
-	// Set up portrait/landscap registers - 4 steps:
-	// 1. Enable P/L
-	// 2. Set the back/front angle trigger points (z-lock)
-	// 3. Set the threshold/hysteresis angle
-	// 4. Set the debouce rate
-	// For more info check out the MMA8452Q data sheet
+	/* Set up portrait/landscap registers - 4 steps:
+	   1. Enable P/L
+	   2. Set the back/front angle trigger points (z-lock)
+	   3. Set the threshold/hysteresis angle
+	   4. Set the debouce rate
+	   For more info check out the MMA8452Q data sheet */
 	writeRegister(0x11, 0x40);  // 1. Enable P/L
 	writeRegister(0x13, 0x44);  // 2. 29deg z-lock (don't think this register is actually writable)
 	writeRegister(0x14, 0x84);  // 3. 45deg thresh, 14deg hyst (don't think this register is writable either)
 	writeRegister(0x12, 0x50);  // 4. debounce counter at 100ms (at 800 hz)
 
 	/* Set up single and double tap - 5 steps:
-	1. Set up single and/or double tap detection on each axis individually.
-	2. Set the threshold - minimum required acceleration to cause a tap.
-	3. Set the time limit - the maximum time that a tap can be above the threshold
-	4. Set the pulse latency - the minimum required time between one pulse and the next
-	5. Set the second pulse window - maximum allowed time between end of latency and start of second pulse
-	for more info check out this app note: http://cache.freescale.com/files/sensors/doc/app_note/AN4072.pdf */
+		1. Set up single and/or double tap detection on each axis individually.
+		2. Set the threshold - minimum required acceleration to cause a tap.
+		3. Set the time limit - the maximum time that a tap can be above the threshold
+		4. Set the pulse latency - the minimum required time between one pulse and the next
+		5. Set the second pulse window - maximum allowed time between end of latency and start of second pulse
+	   for more info check out this app note: http://cache.freescale.com/files/sensors/doc/app_note/AN4072.pdf */
 	writeRegister(0x21, 0x7F);  // 1. enable single/double taps on all axes
 	// writeRegister(0x21, 0x55);  // 1. single taps only on all axes
 	// writeRegister(0x21, 0x6A);  // 1. double taps only on all axes
@@ -254,7 +261,7 @@ void initMMA8452(byte fsr, byte dataRate)
 	writeRegister(0x27, 0xA0);  // 4. 200ms (at 800Hz odr) between taps min, this also depends on the data rate
 	writeRegister(0x28, 0xFF);  // 5. 318ms (max value) between taps max
 
-	// Set up interrupt 1 and 2
+	/* Set up interrupt 1 and 2 */
 	writeRegister(0x2C, 0x02);  // Active high, push-pull interrupts
 	writeRegister(0x2D, 0x19);  // DRDY, P/L and tap ints enabled
 	writeRegister(0x2E, 0x01);  // DRDY on INT1, P/L and taps on INT2
