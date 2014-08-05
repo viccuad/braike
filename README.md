@@ -15,14 +15,14 @@ mode: the light will switch itself off if not moved for a while.
 # Milestones
  - [x] Set the accelerometer and be able to receive from it. Understand the accel.
  - [x] Set up simple LED. Have a LED bright up when the accel detects the "bike" is braking.
- - [ ] Filter the accel axis info. Differenciate from humps and lateral movements, and braking (the though one).
+ - [x] Filter the accel axis info. Differenciate from humps and lateral movements, and braking (the though one).
     - [x] Fix clock timing from atmega and accel.
     - [x] Filter accel info (Butterworth filters, averages?).
     - [ ] ~~Calibrate the direction at the beginning.~~
     - [x] Save a vector of direction/tilt meanwhile it is in movement.
     - [x] Detect braking. 
- - [ ] Set up powerful final LED.
- - [ ] Power it by batteries.
+ - [ ] Put the atmega to sleep meanwhile leaving the PWM working.
+ - [ ] Hook up with a bike light.
  - [ ] Go to low power mode on atmega and accelerometer if there isn't movement for 1 minute. Set up wake-up.
  - [ ] End prototype phase: abandon Arduino format, program an ATmega328. Design final HW format.
  - [ ] Pack it for use on the bike!
