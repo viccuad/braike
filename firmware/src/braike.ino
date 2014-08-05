@@ -42,7 +42,7 @@ long previousMillis = 0;        // will store last time LED was updated
 int resting_brightness = 0;             // how bright the LED is. value [0,255]
 // the follow variables is a long because the time, measured in miliseconds,
 // will quickly become a bigger number than can be stored in an int.
-const long intervalLED = 1000;  // interval at which to blink (milliseconds)
+const long intervalLED = 1000;//5000;  // interval at which to blink (milliseconds)
 long LEDonMillis;               // will store last time the led time was updated
 
 /* Sleep variables */
@@ -50,7 +50,7 @@ const long intervalSleep = 60000;  // interval at which to go to sleep (millisec
 
 /* Accel variables */
 int accelCount[3];  // Stores the 12-bit signed value
-float accelG[3];    // Stores the real accel value in g's
+float accelG[3], hypotenuse;    // Stores the real accel value in g's
 
 /* Moving average variables */
 float Sample_Vector[9];
@@ -121,7 +121,10 @@ void loop()
 				for (int i=0; i<3; i++)
 					accelG[i] = (float) accelCount[i]/((1<<12)/(2*GSCALE));
 
-				Sample_Vector[9] = accelG[2]; // Z axis
+				/* compute tilt */
+				hypotenuse = sqrt( sq(accelG[2]) + sq(abs((accelG[0]-1))) );
+
+				Sample_Vector[9] = hypotenuse;
 
 			}
 			subtotal += Sample_Vector[k];
@@ -136,28 +139,38 @@ void loop()
 		acc = ((subtotal - min - max)/8);
 
 		/* Debug printing */
-		Serial.print(Sample_Vector[9]);
+		// Serial.print(Sample_Vector[9]);
+		// Serial.print("\t");  // tabs in between axes
+		// Serial.print(acc);
+		// Serial.print("\t");  // tabs in between axes
+		// Serial.print(1);
+		// Serial.println();
+
+		/* Debug printing */
+		Serial.print(accelG[0]);
 		Serial.print("\t");  // tabs in between axes
-		Serial.print(acc);
+		Serial.print(accelG[1]);
 		Serial.print("\t");  // tabs in between axes
-		Serial.print(1);
+		Serial.print(accelG[2]);
 		Serial.println();
+
+
 
 		/* Lookup activation thresholds */
 		if(acc > strong_braking){ 		/* it corresponds to the maximum braking effort */
-    			analogWrite(ledPin, 64); 	/* set the PWM duty cycle to 25% */
+    			analogWrite(ledPin, 255); 	/* set the PWM duty cycle to 100% */
 			brakeLed = TRUE;
 		}
 		else if(acc > medium_braking){		/* it corresponds to a medium braking effort */
-			analogWrite(ledPin, 127); 	/* set the PWM duty cycle to 50% */
+			analogWrite(ledPin, 191); 	/* set the PWM duty cycle to 75% */
 			brakeLed = TRUE;
 		}
 		else if(acc > soft_braking){		/* it corresponds to a soft braking effort */
-			analogWrite(ledPin, 191);	/* set the PWM duty cycle to 75% */
+			analogWrite(ledPin, 127);	/* set the PWM duty cycle to 50% */
 			brakeLed = TRUE;
 		}
 		else{ 					/* if no braking */
-			analogWrite(ledPin, 255); 	/* PWM duty cycle to 100% set LEDs OFF */
+			analogWrite(ledPin, 64); 	/* PWM duty cycle to 25% */
 			brakeLed = FALSE;
 		}
 		checkTimers();
